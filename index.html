@@ -1,0 +1,2245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2D Logic Gate Simulator & Schematic Diagram Studio</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #070b14;
+            --bg-card: #0d1527;
+            --bg-card-subtle: #131f38;
+            --border-dim: #1e2c4d;
+            --border-glow: #22d3ee;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --text-accent: #38bdf8;
+            --high-color: #10b981;
+            --high-glow: rgba(16, 185, 129, 0.6);
+            --low-color: #64748b;
+            --low-dim: #334155;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            min-height: 100vh;
+            background-image:
+                radial-gradient(circle at 15% 20%, rgba(6, 182, 212, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: rgba(13, 21, 39, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.5);
+        }
+
+        .brand-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-sub {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(30, 44, 77, 0.5);
+            border: 1px solid var(--border-dim);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-family: var(--font-mono);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--high-color);
+            box-shadow: 0 0 8px var(--high-color);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+
+            50% {
+                transform: scale(1.3);
+                opacity: 0.6;
+            }
+        }
+
+        main {
+            flex: 1;
+            max-width: 1440px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glassmorphism card */
+        .panel-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            position: relative;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 12px;
+        }
+
+        .panel-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Gate selector buttons */
+        .gate-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .gate-btn {
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--border-dim);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 10px 6px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .gate-btn svg {
+            width: 28px;
+            height: 18px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .gate-btn:hover {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .gate-btn.active {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.25), rgba(59, 130, 246, 0.25));
+            border-color: var(--accent-cyan);
+            color: #38bdf8;
+            box-shadow: 0 0 16px rgba(6, 182, 212, 0.35);
+        }
+
+        /* Inputs switch section */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .input-row {
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s ease;
+        }
+
+        .input-row.disabled {
+            opacity: 0.35;
+            pointer-events: none;
+            filter: grayscale(0.8);
+        }
+
+        .input-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .input-badge {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #1e293b;
+            color: #94a3b8;
+            font-family: var(--font-mono);
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .input-badge.high {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--high-color);
+            border-color: var(--high-color);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .input-label-text {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .input-subtext {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        /* 2D Realistic Toggle Switch */
+        .switch-toggle-btn {
+            background: #1e293b;
+            border: 2px solid #334155;
+            width: 72px;
+            height: 36px;
+            border-radius: 18px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+            padding: 2px;
+        }
+
+        .switch-toggle-btn::after {
+            content: '0';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #64748b;
+            color: white;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .switch-toggle-btn.active {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: var(--high-color);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .switch-toggle-btn.active::after {
+            content: '1';
+            transform: translateX(36px);
+            background: var(--high-color);
+            box-shadow: 0 0 10px var(--high-color);
+        }
+
+        /* Action Buttons */
+        .btn-compute {
+            background: linear-gradient(135deg, #06b6d4, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-compute:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(6, 182, 212, 0.6);
+            background: linear-gradient(135deg, #0891b2, #1d4ed8);
+        }
+
+        .btn-compute:active {
+            transform: translateY(1px);
+        }
+
+        .btn-compute svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2.5;
+        }
+
+        .controls-extra {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            padding: 0 4px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .checkbox-container input {
+            accent-color: var(--accent-cyan);
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Tabs for 2D visual diagrams */
+        .canvas-container-card {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .view-tabs {
+            display: flex;
+            gap: 6px;
+            background: #090e1b;
+            padding: 5px;
+            border-radius: 12px;
+            border: 1px solid var(--border-dim);
+            width: fit-content;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 8px 16px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background: var(--bg-card-subtle);
+            color: #38bdf8;
+            border: 1px solid var(--border-dim);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 2D Canvas & SVG Diagram Display Area */
+        .diagram-viewport {
+            background: #060913;
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            height: 420px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Grid lines in diagram */
+        .diagram-viewport::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+        }
+
+        /* Layered SVG and Canvas */
+        #schematicSvg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        #particleCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        /* View Modes */
+        .view-content {
+            display: none;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        /* Switch Circuit View */
+        #switchCircuitCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Oscilloscope Waveform View */
+        #waveformCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Real-time Calculation Pipeline Banner */
+        .calculation-pipeline {
+            background: var(--bg-card-subtle);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .pipeline-step {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .pipeline-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .pipeline-value {
+            font-family: var(--font-mono);
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .pipeline-value.result-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-size: 1.25rem;
+        }
+
+        .result-badge.high {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--high-color);
+            border: 1px solid var(--high-color);
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.35);
+        }
+
+        .result-badge.low {
+            background: rgba(100, 116, 139, 0.2);
+            color: #94a3b8;
+            border: 1px solid #475569;
+        }
+
+        .pipeline-arrow {
+            color: #475569;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        /* Truth Table Section */
+        .truth-table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        .truth-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .truth-table th {
+            background: var(--bg-card-subtle);
+            color: var(--text-accent);
+            padding: 10px 14px;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-dim);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .truth-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .truth-table tbody tr:hover td {
+            background: rgba(6, 182, 212, 0.1);
+        }
+
+        .truth-table tr.active-row td {
+            background: rgba(16, 185, 129, 0.18) !important;
+            color: #34d399;
+            font-weight: 700;
+            border-top: 1px solid var(--high-color);
+            border-bottom: 1px solid var(--high-color);
+        }
+
+        .truth-table tr.active-row td:first-child {
+            position: relative;
+        }
+
+        .truth-table tr.active-row td:first-child::before {
+            content: '▶';
+            position: absolute;
+            left: 8px;
+            color: var(--high-color);
+            font-size: 0.7rem;
+        }
+
+        /* Calculation Breakdown Text */
+        .explanation-card {
+            background: rgba(6, 182, 212, 0.05);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #bae6fd;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .explanation-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            margin-top: -2px;
+        }
+
+        /* SVG Wire and gate styles */
+        .wire-path {
+            stroke-width: 4;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: stroke 0.3s ease, filter 0.3s ease;
+        }
+
+        .wire-high {
+            stroke: var(--high-color);
+            filter: drop-shadow(0 0 6px var(--high-color));
+        }
+
+        .wire-low {
+            stroke: var(--low-dim);
+            filter: none;
+        }
+
+        .gate-body-symbol {
+            fill: #0d1a33;
+            stroke: #38bdf8;
+            stroke-width: 3.5;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.35));
+            transition: all 0.3s ease;
+        }
+
+        .gate-body-symbol.evaluating {
+            stroke: #10b981;
+            fill: #064e3b;
+            filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.8));
+        }
+
+        /* Diagram Floating Badges */
+        .diagram-badge {
+            position: absolute;
+            background: rgba(13, 21, 39, 0.8);
+            border: 1px solid var(--border-dim);
+            backdrop-filter: blur(8px);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .badge-bottom-left {
+            bottom: 12px;
+            left: 12px;
+        }
+
+        .badge-top-right {
+            top: 12px;
+            right: 12px;
+        }
+
+        /* Waveform legend */
+        .waveform-legend {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            display: flex;
+            gap: 14px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            z-index: 25;
+            background: rgba(13, 21, 39, 0.7);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-dim);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        /* Footer */
+        footer {
+            border-top: 1px solid var(--border-dim);
+            background: #090e1b;
+            padding: 14px 28px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        footer a {
+            color: var(--text-accent);
+            text-decoration: none;
+        }
+
+        @media (max-width: 640px) {
+
+            header,
+            footer {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+
+            .gate-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header bar -->
+    <header>
+        <div class="brand-container">
+            <div class="brand-logo">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                </svg>
+            </div>
+            <div>
+                <h1 class="brand-title">LogicGate Studio 2D</h1>
+                <p class="brand-sub">Real-Time Circuit Animation & Backend Logic</p>
+            </div>
+        </div>
+
+        <div class="server-status" id="serverStatusBadge">
+            <span class="status-dot"></span>
+            <span id="backendText">Connecting Engine...</span>
+        </div>
+    </header>
+
+    <!-- Main application grid -->
+    <main>
+        <!-- Left Panel: Controls and Input Selection -->
+        <section class="panel-card">
+            <div class="panel-header">
+                <span class="panel-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                    Logic Gate Type
+                </span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);">IEEE
+                    315</span>
+            </div>
+
+            <!-- Gate grid -->
+            <div class="gate-grid" id="gateGrid">
+                <button class="gate-btn active" data-gate="AND">
+                    <svg viewBox="0 0 30 18">
+                        <path d="M2,2 L14,2 C22,2 22,16 14,16 L2,16 Z" />
+                    </svg>
+                    AND
+                </button>
+                <button class="gate-btn" data-gate="OR">
+                    <svg viewBox="0 0 30 18">
+                        <path d="M2,2 Q10,9 2,16 Q18,16 26,9 Q18,2 2,2 Z" />
+                    </svg>
+                    OR
+                </button>
+                <button class="gate-btn" data-gate="XOR">
+                    <svg viewBox="0 0 30 18">
+                        <path d="M2,2 Q10,9 2,16" />
+                        <path d="M6,2 Q14,9 6,16 Q20,16 27,9 Q20,2 6,2 Z" />
+                    </svg>
+                    XOR
+                </button>
+                <button class="gate-btn" data-gate="NOT">
+                    <svg viewBox="0 0 30 18">
+                        <polygon points="4,2 20,9 4,16" />
+                        <circle cx="23" cy="9" r="2.5" />
+                    </svg>
+                    NOT
+                </button>
+                <button class="gate-btn" data-gate="NAND">
+                    <svg viewBox="0 0 30 18">
+                        <path d="M2,2 L12,2 C19,2 19,16 12,16 L2,16 Z" />
+                        <circle cx="22" cy="9" r="2.5" />
+                    </svg>
+                    NAND
+                </button>
+                <button class="gate-btn" data-gate="NOR">
+                    <svg viewBox="0 0 30 18">
+                        <path d="M2,2 Q9,9 2,16 Q16,16 22,9 Q16,2 2,2 Z" />
+                        <circle cx="25" cy="9" r="2.5" />
+                    </svg>
+                    NOR
+                </button>
+                <button class="gate-btn" data-gate="XNOR">
+                    <svg viewBox="0 0 30 18">
+                        <path d="M2,2 Q9,9 2,16" />
+                        <path d="M5,2 Q12,9 5,16 Q18,16 22,9 Q18,2 5,2 Z" />
+                        <circle cx="25" cy="9" r="2.5" />
+                    </svg>
+                    XNOR
+                </button>
+            </div>
+
+            <!-- Inputs section -->
+            <div class="panel-header" style="margin-top: 6px;">
+                <span class="panel-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path>
+                    </svg>
+                    Signal Inputs
+                </span>
+                <span id="inputsInfo"
+                    style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">0 = LOW, 1 =
+                    HIGH</span>
+            </div>
+
+            <div class="input-group">
+                <!-- Input A -->
+                <div class="input-row" id="rowInputA">
+                    <div class="input-meta">
+                        <div class="input-badge" id="badgeInputA">0</div>
+                        <div>
+                            <div class="input-label-text">Input Terminal A</div>
+                            <div class="input-subtext" id="voltageA">0.0V (Logic LOW)</div>
+                        </div>
+                    </div>
+                    <button class="switch-toggle-btn" id="toggleA" aria-label="Toggle Input A"
+                        onclick="toggleInput('A')"></button>
+                </div>
+
+                <!-- Input B -->
+                <div class="input-row" id="rowInputB">
+                    <div class="input-meta">
+                        <div class="input-badge" id="badgeInputB">0</div>
+                        <div>
+                            <div class="input-label-text">Input Terminal B</div>
+                            <div class="input-subtext" id="voltageB">0.0V (Logic LOW)</div>
+                        </div>
+                    </div>
+                    <button class="switch-toggle-btn" id="toggleB" aria-label="Toggle Input B"
+                        onclick="toggleInput('B')"></button>
+                </div>
+            </div>
+
+            <!-- Compute button -->
+            <button class="btn-compute" id="btnCompute" onclick="triggerCalculationWithAnimation()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span>Compute via C++ Backend</span>
+            </button>
+
+            <!-- Control toggles -->
+            <div class="controls-extra">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="autoCalculateCheck" checked onchange="handleAutoCalcChange()">
+                    <span>Live Auto-Update</span>
+                </label>
+                <label class="checkbox-container">
+                    <input type="checkbox" id="particleSoundCheck">
+                    <span>Audio Clicks</span>
+                </label>
+            </div>
+
+            <!-- Mini explanation card -->
+            <div class="explanation-card">
+                <div class="explanation-icon">💡</div>
+                <div id="logicFormulaText">
+                    <strong>AND Gate Operation:</strong> High output (1) requires both inputs A and B to be 1.
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Visual 2D Animated Diagrams and Diagnostics -->
+        <section class="canvas-container-card">
+            <!-- Diagram View Switcher Tabs -->
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div class="view-tabs">
+                    <button class="tab-btn active" data-view="schematic" onclick="switchView('schematic')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="9" y1="21" x2="9" y2="9"></line>
+                        </svg>
+                        2D Logic Schematic
+                    </button>
+                    <button class="tab-btn" data-view="switches" onclick="switchView('switches')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                        </svg>
+                        2D Switch Circuit
+                    </button>
+                    <button class="tab-btn" data-view="waveform" onclick="switchView('waveform')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        2D Timing Waveform
+                    </button>
+                </div>
+
+                <!-- Simulation Speed -->
+                <div
+                    style="display: flex; align-items: center; gap: 10px; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-muted);">
+                    <span>Anim Speed:</span>
+                    <select id="animSpeedSelect" onchange="updateSpeed()"
+                        style="background: #0d1527; color: var(--text-main); border: 1px solid var(--border-dim); border-radius: 6px; padding: 4px 8px; font-family: var(--font-mono);">
+                        <option value="1">1.0x Normal</option>
+                        <option value="0.5">0.5x Slow-Mo</option>
+                        <option value="2">2.0x Fast</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Viewport Container -->
+            <div class="diagram-viewport" id="diagramViewport">
+                <!-- VIEW 1: Schematic SVG with Canvas Particle Flow -->
+                <div class="view-content active" id="viewSchematic">
+                    <svg id="schematicSvg" viewBox="0 0 850 420" preserveAspectRatio="xMidYMid meet">
+                        <!-- Definitions for glow filters, gradients, markers -->
+                        <defs>
+                            <!-- Glow filter for active logic signals -->
+                            <filter id="signalGlow" x="-30%" y="-30%" width="160%" height="160%">
+                                <feGaussianBlur stdDeviation="5" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                            <filter id="bulbGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+                                <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 2 0" />
+                                <feMerge>
+                                    <feMergeNode />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                            <!-- Radial gradient for LED ON -->
+                            <radialGradient id="ledGlowGradient" cx="50%" cy="50%" r="50%">
+                                <stop offset="0%" stop-color="#34d399" stop-opacity="1" />
+                                <stop offset="40%" stop-color="#10b981" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="#065f46" stop-opacity="0.2" />
+                            </radialGradient>
+                            <!-- Linear gradient for LED dome -->
+                            <linearGradient id="ledDomeReflect" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4" />
+                                <stop offset="50%" stop-color="#ffffff" stop-opacity="0.05" />
+                                <stop offset="100%" stop-color="#000000" stop-opacity="0.3" />
+                            </linearGradient>
+                        </defs>
+
+                        <!-- Background Schematic Grid / Markings -->
+                        <g opacity="0.15">
+                            <line x1="50" y1="210" x2="800" y2="210" stroke="#38bdf8" stroke-dasharray="4 8" />
+                            <line x1="425" y1="30" x2="425" y2="390" stroke="#38bdf8" stroke-dasharray="4 8" />
+                        </g>
+
+                        <!-- INPUT WIRES -->
+                        <!-- Input A Wire: from (80, 140) to Gate Input A (360, 140) -->
+                        <path id="wireA" class="wire-path wire-low" d="M 90 140 L 360 140" />
+                        <!-- Input B Wire: from (80, 280) to Gate Input B (360, 280) -->
+                        <path id="wireB" class="wire-path wire-low" d="M 90 280 L 360 280" />
+
+                        <!-- INPUT TERMINAL BADGES -->
+                        <g id="termA" transform="translate(40, 120)">
+                            <rect width="50" height="40" rx="8" fill="#131f38" stroke="#1e2c4d" stroke-width="2" />
+                            <text x="25" y="25" fill="#f1f5f9" font-family="'JetBrains Mono', monospace" font-size="14"
+                                font-weight="700" text-anchor="middle">A</text>
+                        </g>
+
+                        <g id="termB" transform="translate(40, 260)">
+                            <rect width="50" height="40" rx="8" fill="#131f38" stroke="#1e2c4d" stroke-width="2" />
+                            <text x="25" y="25" fill="#f1f5f9" font-family="'JetBrains Mono', monospace" font-size="14"
+                                font-weight="700" text-anchor="middle">B</text>
+                        </g>
+
+                        <!-- NOT Gate single input centered line (for NOT gate) -->
+                        <path id="wireNotCenter" class="wire-path wire-low" d="M 90 210 L 360 210"
+                            style="display:none;" />
+
+                        <!-- GATE BODY CONTAINER (Will be rendered dynamically based on selected gate) -->
+                        <g id="gateSymbolGroup">
+                            <!-- Gate body rendered via JS -->
+                        </g>
+
+                        <!-- OUTPUT WIRE: from Gate Output (520, 210) to LED Terminal (680, 210) -->
+                        <path id="wireOut" class="wire-path wire-low" d="M 520 210 L 680 210" />
+
+                        <!-- OUTPUT INDICATOR (2D Animated LED / Bulb) -->
+                        <g id="ledIndicator" transform="translate(680, 160)">
+                            <!-- Halo bloom for LED ON -->
+                            <circle id="ledAura" cx="50" cy="50" r="45" fill="url(#ledGlowGradient)" opacity="0"
+                                filter="url(#bulbGlow)" />
+
+                            <!-- LED Base / Bezel -->
+                            <rect x="42" y="88" width="16" height="18" fill="#475569" rx="2" />
+                            <path d="M 45 106 L 45 120 M 55 106 L 55 120" stroke="#94a3b8" stroke-width="2" />
+
+                            <!-- LED Dome -->
+                            <path d="M 28 88 L 28 50 C 28 25, 72 25, 72 50 L 72 88 Z" id="ledDome" fill="#1e293b"
+                                stroke="#334155" stroke-width="2.5" />
+                            <!-- Internal Filament / Die -->
+                            <path d="M 42 66 L 50 56 L 58 66" stroke="#64748b" stroke-width="2" fill="none"
+                                id="ledFilament" />
+
+                            <!-- Dome Glass Highlight Reflection -->
+                            <path d="M 34 80 L 34 50 C 34 32, 66 32, 66 50" stroke="url(#ledDomeReflect)"
+                                stroke-width="3" fill="none" opacity="0.6" />
+
+                            <!-- Dynamic Ray Burst (when high) -->
+                            <g id="ledRayBurst" opacity="0">
+                                <line x1="50" y1="12" x2="50" y2="4" stroke="#10b981" stroke-width="2.5"
+                                    stroke-linecap="round" />
+                                <line x1="20" y1="24" x2="14" y2="18" stroke="#10b981" stroke-width="2.5"
+                                    stroke-linecap="round" />
+                                <line x1="80" y1="24" x2="86" y2="18" stroke="#10b981" stroke-width="2.5"
+                                    stroke-linecap="round" />
+                                <line x1="8" y1="50" x2="0" y2="50" stroke="#10b981" stroke-width="2.5"
+                                    stroke-linecap="round" />
+                                <line x1="92" y1="50" x2="100" y2="50" stroke="#10b981" stroke-width="2.5"
+                                    stroke-linecap="round" />
+                            </g>
+
+                            <!-- State Label under LED -->
+                            <rect x="18" y="125" width="64" height="26" rx="6" fill="#0d1527" stroke="#1e2c4d"
+                                stroke-width="1.5" />
+                            <text id="ledLabel" x="50" y="143" fill="#94a3b8" font-family="'JetBrains Mono', monospace"
+                                font-size="12" font-weight="700" text-anchor="middle">OUT: 0</text>
+                        </g>
+
+                        <!-- Voltage annotations along wires -->
+                        <text id="labelVoltA" x="220" y="128" fill="#64748b" font-family="'JetBrains Mono', monospace"
+                            font-size="11" text-anchor="middle">0V (LOW)</text>
+                        <text id="labelVoltB" x="220" y="270" fill="#64748b" font-family="'JetBrains Mono', monospace"
+                            font-size="11" text-anchor="middle">0V (LOW)</text>
+                        <text id="labelVoltOut" x="600" y="198" fill="#64748b" font-family="'JetBrains Mono', monospace"
+                            font-size="11" text-anchor="middle">0V (LOW)</text>
+                    </svg>
+
+                    <!-- Particle Animation Canvas Overlay -->
+                    <canvas id="particleCanvas"></canvas>
+
+                    <!-- Overlay badges -->
+                    <div class="diagram-badge badge-bottom-left" id="liveSimBadge">Signal State: Static</div>
+                    <div class="diagram-badge badge-top-right">Standard 2D Logic Gate Engine</div>
+                </div>
+
+                <!-- VIEW 2: 2D Electrical Switch Circuit Canvas -->
+                <div class="view-content" id="viewSwitches">
+                    <canvas id="switchCircuitCanvas"></canvas>
+                    <div class="diagram-badge badge-bottom-left">Physical Transistor / Switch Model</div>
+                    <div class="diagram-badge badge-top-right">Current Loop: <span id="currentLoopStatus">Broken</span>
+                    </div>
+                </div>
+
+                <!-- VIEW 3: 2D Digital Waveform Canvas -->
+                <div class="view-content" id="viewWaveform">
+                    <div class="waveform-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#38bdf8;"></div> Input A
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#a855f7;"></div> Input B
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:#10b981;"></div> Output Q
+                        </div>
+                    </div>
+                    <canvas id="waveformCanvas"></canvas>
+                    <div class="diagram-badge badge-bottom-left">Digital Logic Waveform (Live Scan)</div>
+                </div>
+            </div>
+
+            <!-- Calculation Pipeline Banner -->
+            <div class="calculation-pipeline">
+                <div class="pipeline-step">
+                    <span class="pipeline-label">Input Values</span>
+                    <span class="pipeline-value" id="pipeInputs">A = 0, B = 0</span>
+                </div>
+                <div class="pipeline-arrow">➔</div>
+                <div class="pipeline-step">
+                    <span class="pipeline-label">Boolean Function</span>
+                    <span class="pipeline-value" id="pipeFormula" style="color: #38bdf8;">0 · 0</span>
+                </div>
+                <div class="pipeline-arrow">➔</div>
+                <div class="pipeline-step">
+                    <span class="pipeline-label">Calculation Output</span>
+                    <span class="pipeline-value result-badge low" id="pipeResult">Result: 0</span>
+                </div>
+                <div class="pipeline-step" style="margin-left: auto;">
+                    <span class="pipeline-label">Computed Engine</span>
+                    <span class="pipeline-value" id="pipeEngine" style="font-size: 0.85rem; color: #94a3b8;">Local /
+                        C++</span>
+                </div>
+            </div>
+
+            <!-- Truth Table -->
+            <div class="panel-card" style="padding: 16px;">
+                <div class="panel-header" style="margin-bottom: 8px;">
+                    <span class="panel-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                            <line x1="3" y1="15" x2="21" y2="15"></line>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                            <line x1="15" y1="3" x2="15" y2="21"></line>
+                        </svg>
+                        Dynamic Truth Table & Quick-Test
+                    </span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Click any row to test input state</span>
+                </div>
+
+                <div class="truth-table-container">
+                    <table class="truth-table" id="truthTable">
+                        <thead id="truthTableHead">
+                            <!-- Injected via JS -->
+                        </thead>
+                        <tbody id="truthTableBody">
+                            <!-- Injected via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div>2D Logic Gate Simulator • High-Fidelity Animated Diagrams • Fullstack C++ / Python</div>
+        <div style="font-family: var(--font-mono); font-size: 0.75rem;">Status: Ready • 60 FPS Engine</div>
+    </footer>
+
+    <!-- Main Logic Script -->
+    <script>
+        // State variables
+        let state = {
+            gate: 'AND',
+            a: 0,
+            b: 0,
+            result: 0,
+            backend: 'Checking...',
+            autoCalculate: true,
+            soundEnabled: false,
+            animSpeed: 1.0,
+            activeView: 'schematic',
+            isSimulatingPulse: false,
+            pulseProgress: 0,
+            waveformHistory: []
+        };
+
+        // Audio Context setup for optional synthetic feedback
+        let audioCtx = null;
+        function playBeep(freq = 440, type = 'sine', duration = 0.08) {
+            if (!state.soundEnabled) return;
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) { }
+        }
+
+        // Particle system for 2D Canvas electron current flow
+        const particles = [];
+        const MAX_PARTICLES = 50;
+
+        class SignalParticle {
+            constructor(wireType) {
+                this.wireType = wireType; // 'A', 'B', or 'OUT'
+                this.reset();
+            }
+
+            reset() {
+                this.t = Math.random(); // 0 to 1 along wire
+                this.speed = (0.004 + Math.random() * 0.004) * state.animSpeed;
+                this.size = 2.5 + Math.random() * 2;
+                this.alpha = 0.4 + Math.random() * 0.6;
+            }
+
+            update() {
+                this.t += this.speed * state.animSpeed;
+                if (this.t > 1) {
+                    this.t = 0;
+                }
+            }
+        }
+
+        // Initialize particles
+        for (let i = 0; i < 20; i++) particles.push(new SignalParticle('A'));
+        for (let i = 0; i < 20; i++) particles.push(new SignalParticle('B'));
+        for (let i = 0; i < 20; i++) particles.push(new SignalParticle('OUT'));
+
+        // Canvas setups
+        const particleCanvas = document.getElementById('particleCanvas');
+        const pCtx = particleCanvas.getContext('2d');
+
+        const switchCanvas = document.getElementById('switchCircuitCanvas');
+        const sCtx = switchCanvas.getContext('2d');
+
+        const waveCanvas = document.getElementById('waveformCanvas');
+        const wCtx = waveCanvas.getContext('2d');
+
+        function resizeCanvases() {
+            const viewport = document.getElementById('diagramViewport');
+            const w = viewport.clientWidth;
+            const h = viewport.clientHeight;
+
+            particleCanvas.width = w;
+            particleCanvas.height = h;
+
+            switchCanvas.width = w;
+            switchCanvas.height = h;
+
+            waveCanvas.width = w;
+            waveCanvas.height = h;
+        }
+
+        window.addEventListener('resize', resizeCanvases);
+
+        // Gate definitions & Truth Table data
+        const GATE_CONFIG = {
+            AND: {
+                name: 'AND',
+                symbol: '·',
+                desc: 'Output is HIGH (1) only if both inputs are HIGH (1).',
+                inputs: 2,
+                table: [
+                    { a: 0, b: 0, out: 0 },
+                    { a: 0, b: 1, out: 0 },
+                    { a: 1, b: 0, out: 0 },
+                    { a: 1, b: 1, out: 1 }
+                ]
+            },
+            OR: {
+                name: 'OR',
+                symbol: '+',
+                desc: 'Output is HIGH (1) if at least one input is HIGH (1).',
+                inputs: 2,
+                table: [
+                    { a: 0, b: 0, out: 0 },
+                    { a: 0, b: 1, out: 1 },
+                    { a: 1, b: 0, out: 1 },
+                    { a: 1, b: 1, out: 1 }
+                ]
+            },
+            XOR: {
+                name: 'XOR',
+                symbol: '⊕',
+                desc: 'Output is HIGH (1) if inputs are different.',
+                inputs: 2,
+                table: [
+                    { a: 0, b: 0, out: 0 },
+                    { a: 0, b: 1, out: 1 },
+                    { a: 1, b: 0, out: 1 },
+                    { a: 1, b: 1, out: 0 }
+                ]
+            },
+            NOT: {
+                name: 'NOT',
+                symbol: '¬',
+                desc: 'Inverts the single input. 0 becomes 1, and 1 becomes 0.',
+                inputs: 1,
+                table: [
+                    { a: 0, b: null, out: 1 },
+                    { a: 1, b: null, out: 0 }
+                ]
+            },
+            NAND: {
+                name: 'NAND',
+                symbol: '⊼',
+                desc: 'Inverted AND: Output is LOW (0) only when both inputs are HIGH (1).',
+                inputs: 2,
+                table: [
+                    { a: 0, b: 0, out: 1 },
+                    { a: 0, b: 1, out: 1 },
+                    { a: 1, b: 0, out: 1 },
+                    { a: 1, b: 1, out: 0 }
+                ]
+            },
+            NOR: {
+                name: 'NOR',
+                symbol: '⊽',
+                desc: 'Inverted OR: Output is HIGH (1) only when both inputs are LOW (0).',
+                inputs: 2,
+                table: [
+                    { a: 0, b: 0, out: 1 },
+                    { a: 0, b: 1, out: 0 },
+                    { a: 1, b: 0, out: 0 },
+                    { a: 1, b: 1, out: 0 }
+                ]
+            },
+            XNOR: {
+                name: 'XNOR',
+                symbol: '⊙',
+                desc: 'Inverted XOR: Output is HIGH (1) when both inputs are identical.',
+                inputs: 2,
+                table: [
+                    { a: 0, b: 0, out: 1 },
+                    { a: 0, b: 1, out: 0 },
+                    { a: 1, b: 0, out: 0 },
+                    { a: 1, b: 1, out: 1 }
+                ]
+            }
+        };
+
+        // Draw Logic Gate SVG symbol
+        function renderGateSvg() {
+            const group = document.getElementById('gateSymbolGroup');
+            const g = state.gate;
+            let svgMarkup = '';
+
+            // Center of gate symbol: x: 360 to 520, y: 110 to 310
+            // Gate bounds: (360, 110) to (500, 310)
+            if (g === 'AND') {
+                svgMarkup = `
+                    <path class="gate-body-symbol" id="gateBody" d="M 360 110 L 440 110 A 100 100 0 0 1 440 310 L 360 310 Z" />
+                    <text x="430" y="217" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="20" font-weight="700" text-anchor="middle" opacity="0.8">AND</text>
+                `;
+            } else if (g === 'OR') {
+                svgMarkup = `
+                    <path class="gate-body-symbol" id="gateBody" d="M 360 110 Q 420 210 360 310 Q 470 310 515 210 Q 470 110 360 110 Z" />
+                    <text x="435" y="217" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="20" font-weight="700" text-anchor="middle" opacity="0.8">OR</text>
+                `;
+            } else if (g === 'XOR') {
+                svgMarkup = `
+                    <path d="M 345 110 Q 405 210 345 310" stroke="#38bdf8" stroke-width="3.5" fill="none" stroke-linecap="round" />
+                    <path class="gate-body-symbol" id="gateBody" d="M 360 110 Q 420 210 360 310 Q 470 310 515 210 Q 470 110 360 110 Z" />
+                    <text x="435" y="217" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="20" font-weight="700" text-anchor="middle" opacity="0.8">XOR</text>
+                `;
+            } else if (g === 'NOT') {
+                svgMarkup = `
+                    <polygon class="gate-body-symbol" id="gateBody" points="360,130 470,210 360,290" />
+                    <circle cx="482" cy="210" r="10" class="gate-body-symbol" />
+                    <text x="405" y="216" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" text-anchor="middle" opacity="0.8">NOT</text>
+                `;
+            } else if (g === 'NAND') {
+                svgMarkup = `
+                    <path class="gate-body-symbol" id="gateBody" d="M 360 110 L 430 110 A 100 100 0 0 1 430 310 L 360 310 Z" />
+                    <circle cx="510" cy="210" r="10" class="gate-body-symbol" />
+                    <text x="420" y="217" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" text-anchor="middle" opacity="0.8">NAND</text>
+                `;
+            } else if (g === 'NOR') {
+                svgMarkup = `
+                    <path class="gate-body-symbol" id="gateBody" d="M 360 110 Q 410 210 360 310 Q 455 310 495 210 Q 455 110 360 110 Z" />
+                    <circle cx="508" cy="210" r="10" class="gate-body-symbol" />
+                    <text x="425" y="217" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="18" font-weight="700" text-anchor="middle" opacity="0.8">NOR</text>
+                `;
+            } else if (g === 'XNOR') {
+                svgMarkup = `
+                    <path d="M 345 110 Q 395 210 345 310" stroke="#38bdf8" stroke-width="3.5" fill="none" stroke-linecap="round" />
+                    <path class="gate-body-symbol" id="gateBody" d="M 360 110 Q 410 210 360 310 Q 455 310 495 210 Q 455 110 360 110 Z" />
+                    <circle cx="508" cy="210" r="10" class="gate-body-symbol" />
+                    <text x="425" y="217" fill="#38bdf8" font-family="'JetBrains Mono', monospace" font-size="17" font-weight="700" text-anchor="middle" opacity="0.8">XNOR</text>
+                `;
+            }
+
+            group.innerHTML = svgMarkup;
+
+            // Handle NOT gate wire layout
+            const wireA = document.getElementById('wireA');
+            const wireB = document.getElementById('wireB');
+            const wireNotCenter = document.getElementById('wireNotCenter');
+            const termA = document.getElementById('termA');
+            const termB = document.getElementById('termB');
+            const rowInputB = document.getElementById('rowInputB');
+            const labelVoltA = document.getElementById('labelVoltA');
+            const labelVoltB = document.getElementById('labelVoltB');
+
+            if (g === 'NOT') {
+                wireA.style.display = 'none';
+                wireB.style.display = 'none';
+                wireNotCenter.style.display = 'block';
+                termA.setAttribute('transform', 'translate(40, 190)');
+                termB.style.display = 'none';
+                rowInputB.classList.add('disabled');
+                labelVoltA.setAttribute('y', '198');
+                labelVoltB.style.display = 'none';
+            } else {
+                wireA.style.display = 'block';
+                wireB.style.display = 'block';
+                wireNotCenter.style.display = 'none';
+                termA.setAttribute('transform', 'translate(40, 120)');
+                termB.style.display = 'block';
+                rowInputB.classList.remove('disabled');
+                labelVoltA.setAttribute('y', '128');
+                labelVoltB.style.display = 'block';
+            }
+        }
+
+        // Generate dynamic Truth Table
+        function renderTruthTable() {
+            const head = document.getElementById('truthTableHead');
+            const body = document.getElementById('truthTableBody');
+            const cfg = GATE_CONFIG[state.gate];
+
+            if (cfg.inputs === 1) {
+                head.innerHTML = `
+                    <tr>
+                        <th>Input A</th>
+                        <th>Expression</th>
+                        <th>Output Q</th>
+                        <th>State</th>
+                    </tr>
+                `;
+                body.innerHTML = cfg.table.map(row => {
+                    const isActive = (state.a === row.a);
+                    return `
+                        <tr class="${isActive ? 'active-row' : ''}" onclick="applyInputs(${row.a}, 0)">
+                            <td>${row.a}</td>
+                            <td>¬(${row.a})</td>
+                            <td><span style="color: ${row.out ? '#10b981' : '#94a3b8'}; font-weight: 700;">${row.out}</span></td>
+                            <td><span style="font-size:0.75rem; color:${row.out ? '#34d399' : '#64748b'}">${row.out ? 'HIGH (5V)' : 'LOW (0V)'}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                head.innerHTML = `
+                    <tr>
+                        <th>Input A</th>
+                        <th>Input B</th>
+                        <th>Expression</th>
+                        <th>Output Q</th>
+                        <th>State</th>
+                    </tr>
+                `;
+                body.innerHTML = cfg.table.map(row => {
+                    const isActive = (state.a === row.a && state.b === row.b);
+                    return `
+                        <tr class="${isActive ? 'active-row' : ''}" onclick="applyInputs(${row.a}, ${row.b})">
+                            <td>${row.a}</td>
+                            <td>${row.b}</td>
+                            <td>${row.a} ${cfg.symbol} ${row.b}</td>
+                            <td><span style="color: ${row.out ? '#10b981' : '#94a3b8'}; font-weight: 700;">${row.out}</span></td>
+                            <td><span style="font-size:0.75rem; color:${row.out ? '#34d399' : '#64748b'}">${row.out ? 'HIGH (5V)' : 'LOW (0V)'}</span></td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+        }
+
+        function applyInputs(a, b) {
+            state.a = a;
+            state.b = b;
+            updateInputUI();
+            triggerCalculationWithAnimation();
+        }
+
+        // Toggle inputs A or B
+        function toggleInput(input) {
+            if (input === 'A') {
+                state.a = state.a === 1 ? 0 : 1;
+                playBeep(state.a ? 600 : 300, 'triangle');
+            } else {
+                state.b = state.b === 1 ? 0 : 1;
+                playBeep(state.b ? 600 : 300, 'triangle');
+            }
+            updateInputUI();
+            if (state.autoCalculate) {
+                calculateBackend(false);
+            }
+        }
+
+        function updateInputUI() {
+            // Update Toggle buttons
+            const toggleA = document.getElementById('toggleA');
+            const toggleB = document.getElementById('toggleB');
+            const badgeA = document.getElementById('badgeInputA');
+            const badgeB = document.getElementById('badgeInputB');
+            const voltA = document.getElementById('voltageA');
+            const voltB = document.getElementById('voltageB');
+
+            if (state.a === 1) {
+                toggleA.classList.add('active');
+                badgeA.classList.add('high');
+                badgeA.innerText = '1';
+                voltA.innerText = '5.0V (Logic HIGH)';
+                voltA.style.color = '#34d399';
+            } else {
+                toggleA.classList.remove('active');
+                badgeA.classList.remove('high');
+                badgeA.innerText = '0';
+                voltA.innerText = '0.0V (Logic LOW)';
+                voltA.style.color = '#94a3b8';
+            }
+
+            if (state.b === 1) {
+                toggleB.classList.add('active');
+                badgeB.classList.add('high');
+                badgeB.innerText = '1';
+                voltB.innerText = '5.0V (Logic HIGH)';
+                voltB.style.color = '#34d399';
+            } else {
+                toggleB.classList.remove('active');
+                badgeB.classList.remove('high');
+                badgeB.innerText = '0';
+                voltB.innerText = '0.0V (Logic LOW)';
+                voltB.style.color = '#94a3b8';
+            }
+
+            // Update SVG wire classes
+            const wireA = document.getElementById('wireA');
+            const wireB = document.getElementById('wireB');
+            const wireNotCenter = document.getElementById('wireNotCenter');
+            const labelVoltA = document.getElementById('labelVoltA');
+            const labelVoltB = document.getElementById('labelVoltB');
+
+            if (state.gate === 'NOT') {
+                wireNotCenter.className = `wire-path ${state.a ? 'wire-high' : 'wire-low'}`;
+                labelVoltA.textContent = state.a ? '5V (HIGH)' : '0V (LOW)';
+                labelVoltA.setAttribute('fill', state.a ? '#10b981' : '#64748b');
+            } else {
+                wireA.className = `wire-path ${state.a ? 'wire-high' : 'wire-low'}`;
+                wireB.className = `wire-path ${state.b ? 'wire-high' : 'wire-low'}`;
+                labelVoltA.textContent = state.a ? '5V (HIGH)' : '0V (LOW)';
+                labelVoltA.setAttribute('fill', state.a ? '#10b981' : '#64748b');
+                labelVoltB.textContent = state.b ? '5V (HIGH)' : '0V (LOW)';
+                labelVoltB.setAttribute('fill', state.b ? '#10b981' : '#64748b');
+            }
+        }
+
+        // Calculation via Server with client fallback
+        async function calculateBackend(animateWavefront = true) {
+            let res = 0;
+            let backendName = 'Local Fallback';
+            let formulaStr = '';
+            let explainStr = '';
+
+            // Calculate locally first as fallback
+            const a = state.a;
+            const b = state.b;
+            const g = state.gate;
+
+            if (g === 'AND') res = a & b;
+            else if (g === 'OR') res = a | b;
+            else if (g === 'XOR') res = a ^ b;
+            else if (g === 'NOT') res = a === 1 ? 0 : 1;
+            else if (g === 'NAND') res = !(a & b) ? 1 : 0;
+            else if (g === 'NOR') res = !(a | b) ? 1 : 0;
+            else if (g === 'XNOR') res = (!(a ^ b)) ? 1 : 0;
+
+            // Attempt backend fetch from app.py
+            try {
+                const response = await fetch('/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ gate: g, a: a, b: b })
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    res = data.result;
+                    backendName = data.backend || 'Backend Server';
+                    formulaStr = data.expression || '';
+                    explainStr = data.explanation || '';
+                    document.getElementById('backendText').innerText = backendName;
+                }
+            } catch (err) {
+                backendName = 'Local JS Simulation';
+                document.getElementById('backendText').innerText = 'Local Simulation Mode';
+            }
+
+            state.result = res;
+            state.backend = backendName;
+
+            // Update UI elements
+            updateOutputDisplay(formulaStr, explainStr);
+            renderTruthTable();
+
+            // Record waveform history point
+            addWaveformPoint(state.a, state.b, state.result);
+
+            if (animateWavefront) {
+                startSignalPulseWave();
+            }
+        }
+
+        function updateOutputDisplay(formulaStr, explainStr) {
+            const wireOut = document.getElementById('wireOut');
+            const ledAura = document.getElementById('ledAura');
+            const ledDome = document.getElementById('ledDome');
+            const ledRayBurst = document.getElementById('ledRayBurst');
+            const ledFilament = document.getElementById('ledFilament');
+            const ledLabel = document.getElementById('ledLabel');
+            const labelVoltOut = document.getElementById('labelVoltOut');
+            const pipeInputs = document.getElementById('pipeInputs');
+            const pipeFormula = document.getElementById('pipeFormula');
+            const pipeResult = document.getElementById('pipeResult');
+            const pipeEngine = document.getElementById('pipeEngine');
+            const logicFormulaText = document.getElementById('logicFormulaText');
+            const liveSimBadge = document.getElementById('liveSimBadge');
+
+            const isHigh = state.result === 1;
+
+            // Wire output styling
+            wireOut.className = `wire-path ${isHigh ? 'wire-high' : 'wire-low'}`;
+            labelVoltOut.textContent = isHigh ? '5V (HIGH)' : '0V (LOW)';
+            labelVoltOut.setAttribute('fill', isHigh ? '#10b981' : '#64748b');
+
+            // LED visuals
+            if (isHigh) {
+                ledAura.style.opacity = '1';
+                ledDome.setAttribute('fill', '#10b981');
+                ledDome.setAttribute('stroke', '#34d399');
+                ledRayBurst.style.opacity = '1';
+                ledFilament.setAttribute('stroke', '#ecfdf5');
+                ledLabel.textContent = 'OUT: 1 (HIGH)';
+                ledLabel.setAttribute('fill', '#34d399');
+            } else {
+                ledAura.style.opacity = '0';
+                ledDome.setAttribute('fill', '#1e293b');
+                ledDome.setAttribute('stroke', '#334155');
+                ledRayBurst.style.opacity = '0';
+                ledFilament.setAttribute('stroke', '#64748b');
+                ledLabel.textContent = 'OUT: 0 (LOW)';
+                ledLabel.setAttribute('fill', '#94a3b8');
+            }
+
+            // Pipeline banner
+            if (state.gate === 'NOT') {
+                pipeInputs.textContent = `A = ${state.a}`;
+                pipeFormula.textContent = `¬(${state.a})`;
+            } else {
+                pipeInputs.textContent = `A = ${state.a}, B = ${state.b}`;
+                const sym = GATE_CONFIG[state.gate].symbol;
+                pipeFormula.textContent = `${state.a} ${sym} ${state.b}`;
+            }
+
+            pipeResult.textContent = `Result: ${state.result}`;
+            pipeResult.className = `pipeline-value result-badge ${isHigh ? 'high' : 'low'}`;
+            pipeEngine.textContent = state.backend;
+
+            // Logic explanation text
+            if (explainStr) {
+                logicFormulaText.innerHTML = `<strong>${state.gate} Gate:</strong> ${explainStr}`;
+            } else {
+                logicFormulaText.innerHTML = `<strong>${state.gate} Gate:</strong> ${GATE_CONFIG[state.gate].desc}`;
+            }
+
+            liveSimBadge.innerText = `Evaluated: Q = ${state.result} (${isHigh ? 'HIGH' : 'LOW'})`;
+        }
+
+        // Trigger full animation sequence
+        function triggerCalculationWithAnimation() {
+            calculateBackend(true);
+        }
+
+        // Animated Signal Propagation Wavefront
+        function startSignalPulseWave() {
+            state.isSimulatingPulse = true;
+            state.pulseProgress = 0;
+            const gateBody = document.getElementById('gateBody');
+            if (gateBody) gateBody.classList.remove('evaluating');
+
+            if (state.soundEnabled) {
+                playBeep(state.result ? 880 : 220, 'sine', 0.15);
+            }
+        }
+
+        // Main animation loop for 2D diagram overlays
+        let lastFrameTime = performance.now();
+        function animationLoop(timestamp) {
+            const dt = (timestamp - lastFrameTime) / 1000;
+            lastFrameTime = timestamp;
+
+            // Render current view
+            if (state.activeView === 'schematic') {
+                renderParticleCanvas();
+            } else if (state.activeView === 'switches') {
+                renderSwitchCircuitCanvas();
+            } else if (state.activeView === 'waveform') {
+                renderWaveformCanvas();
+            }
+
+            requestAnimationFrame(animationLoop);
+        }
+
+        // 2D Particle flow renderer for Logic Schematic
+        function renderParticleCanvas() {
+            const w = particleCanvas.width;
+            const h = particleCanvas.height;
+            pCtx.clearRect(0, 0, w, h);
+
+            // Scale factor to map SVG coordinates (850 x 420) to Canvas pixels
+            const scaleX = w / 850;
+            const scaleY = h / 420;
+
+            // Update & draw continuous particles
+            particles.forEach(p => {
+                p.update();
+                let x = 0, y = 0, active = false;
+
+                if (state.gate === 'NOT') {
+                    if (p.wireType === 'A') {
+                        active = state.a === 1;
+                        x = (90 + p.t * (360 - 90)) * scaleX;
+                        y = 210 * scaleY;
+                    } else if (p.wireType === 'OUT') {
+                        active = state.result === 1;
+                        x = (520 + p.t * (680 - 520)) * scaleX;
+                        y = 210 * scaleY;
+                    }
+                } else {
+                    if (p.wireType === 'A') {
+                        active = state.a === 1;
+                        x = (90 + p.t * (360 - 90)) * scaleX;
+                        y = 140 * scaleY;
+                    } else if (p.wireType === 'B') {
+                        active = state.b === 1;
+                        x = (90 + p.t * (360 - 90)) * scaleX;
+                        y = 280 * scaleY;
+                    } else if (p.wireType === 'OUT') {
+                        active = state.result === 1;
+                        x = (520 + p.t * (680 - 520)) * scaleX;
+                        y = 210 * scaleY;
+                    }
+                }
+
+                if (active) {
+                    pCtx.beginPath();
+                    pCtx.arc(x, y, p.size * scaleX, 0, Math.PI * 2);
+                    pCtx.fillStyle = `rgba(16, 185, 129, ${p.alpha})`;
+                    pCtx.shadowColor = '#10b981';
+                    pCtx.shadowBlur = 8;
+                    pCtx.fill();
+                    pCtx.shadowBlur = 0;
+                }
+            });
+
+            // Handle Triggered Propagation Wave Pulse
+            if (state.isSimulatingPulse) {
+                state.pulseProgress += 0.018 * state.animSpeed;
+                const p = state.pulseProgress;
+
+                // Phase 1 (0.0 -> 0.45): Inputs travel toward gate
+                if (p < 0.45) {
+                    const t = p / 0.45;
+                    const x = (90 + t * (360 - 90)) * scaleX;
+
+                    if (state.gate === 'NOT') {
+                        drawPulseWave(x, 210 * scaleY, state.a, scaleX);
+                    } else {
+                        drawPulseWave(x, 140 * scaleY, state.a, scaleX);
+                        drawPulseWave(x, 280 * scaleY, state.b, scaleX);
+                    }
+                }
+                // Phase 2 (0.45 -> 0.65): Gate evaluates
+                else if (p >= 0.45 && p < 0.65) {
+                    const gateBody = document.getElementById('gateBody');
+                    if (gateBody) gateBody.classList.add('evaluating');
+
+                    // Sparkles inside gate
+                    const centerX = 440 * scaleX;
+                    const centerY = 210 * scaleY;
+                    pCtx.save();
+                    pCtx.beginPath();
+                    pCtx.arc(centerX, centerY, (15 + Math.sin(p * 20) * 10) * scaleX, 0, Math.PI * 2);
+                    pCtx.fillStyle = state.result === 1 ? 'rgba(16, 185, 129, 0.4)' : 'rgba(100, 116, 139, 0.3)';
+                    pCtx.shadowColor = state.result === 1 ? '#10b981' : '#64748b';
+                    pCtx.shadowBlur = 20;
+                    pCtx.fill();
+                    pCtx.restore();
+                }
+                // Phase 3 (0.65 -> 1.0): Output travels to LED
+                else if (p >= 0.65 && p <= 1.0) {
+                    const gateBody = document.getElementById('gateBody');
+                    if (gateBody) gateBody.classList.remove('evaluating');
+
+                    const t = (p - 0.65) / 0.35;
+                    const x = (520 + t * (680 - 520)) * scaleX;
+                    drawPulseWave(x, 210 * scaleY, state.result, scaleX);
+                } else {
+                    state.isSimulatingPulse = false;
+                }
+            }
+        }
+
+        function drawPulseWave(x, y, isHigh, scale) {
+            pCtx.save();
+            pCtx.beginPath();
+            pCtx.arc(x, y, 9 * scale, 0, Math.PI * 2);
+            pCtx.fillStyle = isHigh ? '#34d399' : '#64748b';
+            pCtx.shadowColor = isHigh ? '#10b981' : '#334155';
+            pCtx.shadowBlur = 15;
+            pCtx.fill();
+
+            // Ring ripple
+            pCtx.beginPath();
+            pCtx.arc(x, y, 16 * scale, 0, Math.PI * 2);
+            pCtx.strokeStyle = isHigh ? 'rgba(16, 185, 129, 0.6)' : 'rgba(100, 116, 139, 0.4)';
+            pCtx.lineWidth = 2 * scale;
+            pCtx.stroke();
+            pCtx.restore();
+        }
+
+        // VIEW 2: 2D Electrical Switch Circuit Canvas Renderer
+        let switchCurrentPhase = 0;
+        function renderSwitchCircuitCanvas() {
+            const w = switchCanvas.width;
+            const h = switchCanvas.height;
+            sCtx.clearRect(0, 0, w, h);
+
+            switchCurrentPhase += 0.05 * state.animSpeed;
+
+            const isCircuitClosed = (state.result === 1);
+            document.getElementById('currentLoopStatus').innerText = isCircuitClosed ? 'Complete (Current Flowing)' : 'Open (No Current)';
+            document.getElementById('currentLoopStatus').style.color = isCircuitClosed ? '#34d399' : '#94a3b8';
+
+            // Draw circuit bounding schematic
+            const padX = w * 0.1;
+            const padY = h * 0.18;
+            const width = w * 0.8;
+            const height = h * 0.64;
+
+            const x0 = padX;
+            const y0 = padY;
+            const x1 = padX + width;
+            const y1 = padY + height;
+
+            // Wire path color
+            sCtx.lineWidth = 4;
+            sCtx.strokeStyle = isCircuitClosed ? '#10b981' : '#334155';
+            sCtx.shadowColor = isCircuitClosed ? '#10b981' : 'transparent';
+            sCtx.shadowBlur = isCircuitClosed ? 12 : 0;
+
+            // Top wire, Bottom wire, Left wire, Right wire
+            sCtx.beginPath();
+            // Left rail (Battery side)
+            sCtx.moveTo(x0, y0);
+            sCtx.lineTo(x0, y1);
+            // Bottom rail
+            sCtx.lineTo(x1, y1);
+            // Right rail (Lamp side)
+            sCtx.lineTo(x1, y0);
+            // Top rail with switch section
+            sCtx.stroke();
+
+            // Draw 5V DC Battery symbol on left rail
+            const midY = (y0 + y1) / 2;
+            sCtx.fillStyle = '#0a0f1d';
+            sCtx.fillRect(x0 - 20, midY - 30, 40, 60);
+
+            // Battery plates
+            sCtx.lineWidth = 4;
+            sCtx.strokeStyle = '#38bdf8';
+            sCtx.beginPath();
+            sCtx.moveTo(x0 - 20, midY - 12);
+            sCtx.lineTo(x0 + 20, midY - 12); // Long positive plate
+            sCtx.stroke();
+
+            sCtx.lineWidth = 6;
+            sCtx.strokeStyle = '#64748b';
+            sCtx.beginPath();
+            sCtx.moveTo(x0 - 10, midY + 12);
+            sCtx.lineTo(x0 + 10, midY + 12); // Short negative plate
+            sCtx.stroke();
+
+            sCtx.fillStyle = '#38bdf8';
+            sCtx.font = 'bold 12px "JetBrains Mono"';
+            sCtx.textAlign = 'right';
+            sCtx.fillText('+ 5V DC', x0 - 28, midY - 8);
+            sCtx.fillStyle = '#64748b';
+            sCtx.fillText('GND (0V)', x0 - 28, midY + 16);
+
+            // Draw 2D Load / Light Bulb on right rail
+            sCtx.fillStyle = '#0a0f1d';
+            sCtx.fillRect(x1 - 25, midY - 35, 50, 70);
+
+            sCtx.beginPath();
+            sCtx.arc(x1, midY, 24, 0, Math.PI * 2);
+            sCtx.fillStyle = isCircuitClosed ? '#10b981' : '#1e293b';
+            sCtx.strokeStyle = isCircuitClosed ? '#34d399' : '#475569';
+            sCtx.lineWidth = 3;
+            sCtx.shadowColor = isCircuitClosed ? '#10b981' : 'transparent';
+            sCtx.shadowBlur = isCircuitClosed ? 25 : 0;
+            sCtx.fill();
+            sCtx.stroke();
+            sCtx.shadowBlur = 0;
+
+            // X inside bulb symbol
+            sCtx.beginPath();
+            sCtx.moveTo(x1 - 14, midY - 14);
+            sCtx.lineTo(x1 + 14, midY + 14);
+            sCtx.moveTo(x1 + 14, midY - 14);
+            sCtx.lineTo(x1 - 14, midY + 14);
+            sCtx.strokeStyle = isCircuitClosed ? '#ffffff' : '#64748b';
+            sCtx.lineWidth = 2;
+            sCtx.stroke();
+
+            sCtx.fillStyle = isCircuitClosed ? '#34d399' : '#94a3b8';
+            sCtx.textAlign = 'left';
+            sCtx.fillText(`LAMP: ${state.result ? 'ON (1)' : 'OFF (0)'}`, x1 + 35, midY + 5);
+
+            // Draw Switch logic depending on Gate
+            // If AND: 2 switches in Series
+            // If OR: 2 switches in Parallel branches
+            // If NOT: Inverter pull switch
+            const g = state.gate;
+            if (g === 'OR' || g === 'NOR') {
+                // Dual Parallel Branches on top wire
+                const branchX1 = x0 + width * 0.25;
+                const branchX2 = x0 + width * 0.75;
+                const branchY_A = y0 - 30;
+                const branchY_B = y0 + 30;
+
+                // Split lines
+                sCtx.strokeStyle = isCircuitClosed ? '#10b981' : '#334155';
+                sCtx.beginPath();
+                sCtx.moveTo(x0, y0);
+                sCtx.lineTo(branchX1, y0);
+                sCtx.lineTo(branchX1, branchY_A);
+                sCtx.moveTo(branchX1, y0);
+                sCtx.lineTo(branchX1, branchY_B);
+
+                sCtx.moveTo(branchX2, branchY_A);
+                sCtx.lineTo(branchX2, y0);
+                sCtx.moveTo(branchX2, branchY_B);
+                sCtx.lineTo(branchX2, y0);
+                sCtx.lineTo(x1, y0);
+                sCtx.stroke();
+
+                // Switch A on top branch
+                drawSingleSwitch(sCtx, branchX1 + 20, branchX2 - 20, branchY_A, state.a, 'Switch A');
+                // Switch B on bottom branch
+                drawSingleSwitch(sCtx, branchX1 + 20, branchX2 - 20, branchY_B, state.b, 'Switch B');
+            } else {
+                // Series Switches on top wire (default for AND, XOR, etc.)
+                const swA_x1 = x0 + width * 0.2;
+                const swA_x2 = x0 + width * 0.45;
+                const swB_x1 = x0 + width * 0.55;
+                const swB_x2 = x0 + width * 0.8;
+
+                // Wire connects x0 -> swA_x1, swA_x2 -> swB_x1, swB_x2 -> x1
+                sCtx.beginPath();
+                sCtx.moveTo(x0, y0);
+                sCtx.lineTo(swA_x1, y0);
+                sCtx.moveTo(swA_x2, y0);
+                sCtx.lineTo(swB_x1, y0);
+                sCtx.moveTo(swB_x2, y0);
+                sCtx.lineTo(x1, y0);
+                sCtx.stroke();
+
+                drawSingleSwitch(sCtx, swA_x1, swA_x2, y0, state.a, 'Switch A');
+                if (g !== 'NOT') {
+                    drawSingleSwitch(sCtx, swB_x1, swB_x2, y0, state.b, 'Switch B');
+                } else {
+                    // Just pass-through wire for B slot in NOT
+                    sCtx.beginPath();
+                    sCtx.moveTo(swB_x1, y0);
+                    sCtx.lineTo(swB_x2, y0);
+                    sCtx.stroke();
+                }
+            }
+
+            // Animated electron particles around circuit if closed
+            if (isCircuitClosed) {
+                const totalPerimeter = (width + height) * 2;
+                for (let i = 0; i < 24; i++) {
+                    const dist = ((i / 24) * totalPerimeter + switchCurrentPhase * 80) % totalPerimeter;
+                    const pt = getPointAlongPerimeter(dist, x0, y0, width, height);
+
+                    sCtx.beginPath();
+                    sCtx.arc(pt.x, pt.y, 4, 0, Math.PI * 2);
+                    sCtx.fillStyle = '#34d399';
+                    sCtx.shadowColor = '#10b981';
+                    sCtx.shadowBlur = 8;
+                    sCtx.fill();
+                    sCtx.shadowBlur = 0;
+                }
+            }
+        }
+
+        function drawSingleSwitch(ctx, x1, x2, y, isClosed, label) {
+            // Contacts
+            ctx.fillStyle = '#38bdf8';
+            ctx.beginPath();
+            ctx.arc(x1, y, 5, 0, Math.PI * 2);
+            ctx.arc(x2, y, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Lever
+            ctx.strokeStyle = isClosed ? '#10b981' : '#f43f5e';
+            ctx.lineWidth = 3.5;
+            ctx.beginPath();
+            ctx.moveTo(x1, y);
+            if (isClosed) {
+                ctx.lineTo(x2, y); // Closed contact
+            } else {
+                ctx.lineTo(x2 - 4, y - 22); // Open switch raised upward
+            }
+            ctx.stroke();
+
+            // Label
+            ctx.fillStyle = isClosed ? '#34d399' : '#94a3b8';
+            ctx.font = '11px "JetBrains Mono"';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${label}: ${isClosed ? 'CLOSED (1)' : 'OPEN (0)'}`, (x1 + x2) / 2, y + 20);
+        }
+
+        function getPointAlongPerimeter(dist, x0, y0, w, h) {
+            if (dist < w) return { x: x0 + dist, y: y0 }; // top
+            dist -= w;
+            if (dist < h) return { x: x0 + w, y: y0 + dist }; // right
+            dist -= h;
+            if (dist < w) return { x: x0 + w - dist, y: y0 + h }; // bottom
+            dist -= w;
+            return { x: x0, y: y0 + h - dist }; // left
+        }
+
+        // VIEW 3: 2D Digital Waveform (Oscilloscope) Canvas Renderer
+        function addWaveformPoint(a, b, q) {
+            state.waveformHistory.push({ a, b, q, t: Date.now() });
+            if (state.waveformHistory.length > 50) {
+                state.waveformHistory.shift();
+            }
+        }
+
+        // Initialize wave history
+        for (let i = 0; i < 30; i++) {
+            state.waveformHistory.push({ a: 0, b: 0, q: 0, t: Date.now() - (30 - i) * 100 });
+        }
+
+        let scanHeadX = 0;
+        function renderWaveformCanvas() {
+            const w = waveCanvas.width;
+            const h = waveCanvas.height;
+            wCtx.clearRect(0, 0, w, h);
+
+            // Channel rows
+            const rowH = h / 3;
+
+            // Draw oscilloscope background grid
+            wCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            wCtx.lineWidth = 1;
+            for (let y = 0; y < h; y += 25) {
+                wCtx.beginPath();
+                wCtx.moveTo(0, y);
+                wCtx.lineTo(w, y);
+                wCtx.stroke();
+            }
+            for (let x = 0; x < w; x += 35) {
+                wCtx.beginPath();
+                wCtx.moveTo(x, 0);
+                wCtx.lineTo(x, h);
+                wCtx.stroke();
+            }
+
+            // Channel baseline lines
+            wCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            wCtx.beginPath();
+            wCtx.moveTo(0, rowH);
+            wCtx.lineTo(w, rowH);
+            wCtx.moveTo(0, rowH * 2);
+            wCtx.lineTo(w, rowH * 2);
+            wCtx.stroke();
+
+            // Channel Labels
+            wCtx.font = '11px "JetBrains Mono"';
+            wCtx.fillStyle = '#38bdf8';
+            wCtx.fillText('Channel A (Input A)', 16, 28);
+            wCtx.fillStyle = '#a855f7';
+            wCtx.fillText('Channel B (Input B)', 16, rowH + 28);
+            wCtx.fillStyle = '#10b981';
+            wCtx.fillText('Channel Q (Output)', 16, rowH * 2 + 28);
+
+            // Draw wave traces
+            const history = state.waveformHistory;
+            if (history.length > 1) {
+                const stepX = (w - 100) / (history.length - 1);
+                const startX = 60;
+
+                drawTrace(history.map(d => d.a), 0, rowH, '#38bdf8', startX, stepX);
+                drawTrace(history.map(d => d.b), rowH, rowH, '#a855f7', startX, stepX);
+                drawTrace(history.map(d => d.q), rowH * 2, rowH, '#10b981', startX, stepX);
+            }
+
+            // Moving scanhead vertical cursor
+            scanHeadX = (scanHeadX + 2 * state.animSpeed) % w;
+            wCtx.strokeStyle = 'rgba(34, 211, 238, 0.4)';
+            wCtx.lineWidth = 1.5;
+            wCtx.beginPath();
+            wCtx.moveTo(scanHeadX, 0);
+            wCtx.lineTo(scanHeadX, h);
+            wCtx.stroke();
+        }
+
+        function drawTrace(values, topY, height, color, startX, stepX) {
+            const highY = topY + height * 0.35;
+            const lowY = topY + height * 0.75;
+
+            wCtx.strokeStyle = color;
+            wCtx.lineWidth = 3;
+            wCtx.shadowColor = color;
+            wCtx.shadowBlur = 6;
+            wCtx.beginPath();
+
+            for (let i = 0; i < values.length; i++) {
+                const x = startX + i * stepX;
+                const y = values[i] === 1 ? highY : lowY;
+
+                if (i === 0) {
+                    wCtx.moveTo(x, y);
+                } else {
+                    const prevY = values[i - 1] === 1 ? highY : lowY;
+                    if (prevY !== y) {
+                        // Square wave vertical transition
+                        wCtx.lineTo(x, prevY);
+                    }
+                    wCtx.lineTo(x, y);
+                }
+            }
+            wCtx.stroke();
+            wCtx.shadowBlur = 0;
+        }
+
+        // View tabs switching
+        function switchView(viewName) {
+            state.activeView = viewName;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-view') === viewName);
+            });
+            document.querySelectorAll('.view-content').forEach(view => {
+                view.classList.remove('active');
+            });
+
+            if (viewName === 'schematic') {
+                document.getElementById('viewSchematic').classList.add('active');
+            } else if (viewName === 'switches') {
+                document.getElementById('viewSwitches').classList.add('active');
+            } else if (viewName === 'waveform') {
+                document.getElementById('viewWaveform').classList.add('active');
+            }
+            resizeCanvases();
+        }
+
+        // Gate selection handler
+        document.querySelectorAll('.gate-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.gate-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.gate = btn.getAttribute('data-gate');
+                renderGateSvg();
+                renderTruthTable();
+                updateInputUI();
+                triggerCalculationWithAnimation();
+            });
+        });
+
+        // Settings handles
+        function handleAutoCalcChange() {
+            state.autoCalculate = document.getElementById('autoCalculateCheck').checked;
+        }
+
+        document.getElementById('particleSoundCheck').addEventListener('change', (e) => {
+            state.soundEnabled = e.target.checked;
+        });
+
+        function updateSpeed() {
+            state.animSpeed = parseFloat(document.getElementById('animSpeedSelect').value) || 1.0;
+        }
+
+        // Initialize application on load
+        window.addEventListener('DOMContentLoaded', () => {
+            resizeCanvases();
+            renderGateSvg();
+            renderTruthTable();
+            updateInputUI();
+            calculateBackend(true);
+            requestAnimationFrame(animationLoop);
+        });
+    </script>
+</body>
+
+</html>

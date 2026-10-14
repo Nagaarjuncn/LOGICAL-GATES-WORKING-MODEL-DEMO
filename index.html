@@ -903,25 +903,6 @@
                 </div>
             </div>
 
-            <!-- Compute button -->
-            <button class="btn-compute" id="btnCompute" onclick="triggerCalculationWithAnimation()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-                <span>Compute via C++ Backend</span>
-            </button>
-
-            <!-- Control toggles -->
-            <div class="controls-extra">
-                <label class="checkbox-container">
-                    <input type="checkbox" id="autoCalculateCheck" checked onchange="handleAutoCalcChange()">
-                    <span>Live Auto-Update</span>
-                </label>
-                <label class="checkbox-container">
-                    <input type="checkbox" id="particleSoundCheck">
-                    <span>Audio Clicks</span>
-                </label>
-            </div>
 
             <!-- Mini explanation card -->
             <div class="explanation-card">
@@ -2217,14 +2198,8 @@
             });
         });
 
-        // Settings handles
-        function handleAutoCalcChange() {
-            state.autoCalculate = document.getElementById('autoCalculateCheck').checked;
-        }
-
-        document.getElementById('particleSoundCheck').addEventListener('change', (e) => {
-            state.soundEnabled = e.target.checked;
-        });
+        // Settings handles (auto-calculate is enabled by default)
+        state.autoCalculate = true;
 
         function updateSpeed() {
             state.animSpeed = parseFloat(document.getElementById('animSpeedSelect').value) || 1.0;
